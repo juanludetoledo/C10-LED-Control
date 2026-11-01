@@ -33,6 +33,7 @@ class MainActivity : Activity() {
     private val statusUuid = UUID.fromString("5b8f0003-7a2d-4c61-9b21-7c10c10a0001")
     private val cccdUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     private val deviceName = "C10_LED_CONTROL"
+    private val deviceAddress = "CC:68:C7:98:46:25"
     private val handler = Handler(Looper.getMainLooper())
 
     private lateinit var statusText: TextView
@@ -175,7 +176,7 @@ class MainActivity : Activity() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
             val name = try { device.name ?: result.scanRecord?.deviceName } catch (_: SecurityException) { null }
-            if (name == deviceName) {
+            if (name == deviceName || device.address.equals(deviceAddress, ignoreCase = true)) {
                 val scanner = bluetoothAdapter()?.bluetoothLeScanner
                 try { scanner?.stopScan(this) } catch (_: Exception) {}
                 scanning = false
@@ -325,10 +326,10 @@ class MainActivity : Activity() {
         val bytes = command.toByteArray(Charsets.UTF_8)
         try {
             val result = if (Build.VERSION.SDK_INT >= 33) {
-                g.writeCharacteristic(ch, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                g.writeCharacteristic(ch, bytes, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
             } else {
                 @Suppress("DEPRECATION")
-                ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
                 @Suppress("DEPRECATION")
                 ch.value = bytes
                 @Suppress("DEPRECATION")
