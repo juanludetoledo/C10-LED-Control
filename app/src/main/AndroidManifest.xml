@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
-    <!-- These Bluetooth permissions are required to scan and connect on Android 12+. -->
+
+    <!-- Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- Android 11 o inferior -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
     <application
-        android:allowBackup="false"
-        android:label="C10 LED Control"
-        android:icon="@drawable/ic_c10_led"
-        android:roundIcon="@drawable/ic_c10_led"
-        android:theme="@android:style/Theme.Material.NoActionBar"
-        android:usesCleartextTraffic="false">
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.C10Led">
         <activity
             android:name=".MainActivity"
             android:exported="true">
