@@ -174,18 +174,30 @@ class MainActivity : Activity() {
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val device = result.device
-            val name = try { device.name ?: result.scanRecord?.deviceName } catch (_: SecurityException) { null }
-            if (name == deviceName || device.address.equals(deviceAddress, ignoreCase = true)) {
+        val device = result.device
+        val name = try {
+            device.name ?: result.scanRecord?.deviceName
+        } catch (_: SecurityException) {
+            null
+        }
+        val address = try {
+            device.address
+        } catch (_: SecurityException) {
+            "MAC no disponible"
+        }
+
+        handler.post {
+            if (name == deviceName || address.equals(deviceAddress, ignoreCase = true)) {
                 val scanner = bluetoothAdapter()?.bluetoothLeScanner
                 try { scanner?.stopScan(this) } catch (_: Exception) {}
                 scanning = false
-                handler.post {
-                    showStatus("Dispositivo encontrado. Conectando…", Color.rgb(255, 190, 70))
-                    connectGatt(device)
-                }
+                showStatus("Encontrada: ${name ?: "sin nombre"} · Conectando…", Color.rgb(255, 190, 70))
+                connectGatt(device)
+            } else {
+                showStatus("Buscando… Detectado: ${name ?: "sin nombre"} · $address", Color.LTGRAY)
             }
         }
+    }
 
         override fun onScanFailed(errorCode: Int) {
             scanning = false
