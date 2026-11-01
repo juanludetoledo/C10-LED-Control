@@ -1,0 +1,21 @@
+C10 LED CONTROL — proyecto Android
+
+Incluye:
+- MainActivity.kt con escaneo BLE sin filtros y modo de baja latencia.
+- Icono vectorial propio.
+- Permisos mínimos necesarios para escanear y conectar por BLE.
+- Botones ON/OFF y UUID originales conservados.
+
+IMPORTANTE:
+Este paquete es el CÓDIGO FUENTE del proyecto, no un APK compilado.
+Para generar APK: abrir la carpeta en Android Studio, esperar la sincronización de Gradle y elegir
+Build > Build Bundle(s) / APK(s) > Build APK(s).
+
+Permisos:
+Android 12 o posterior exige BLUETOOTH_SCAN y BLUETOOTH_CONNECT para esta función. Quitarlos
+impediría escanear o conectarse. El aviso de Android sobre una APK instalada fuera de Play Store
+no se elimina quitando permisos; para evitarlo de forma general hay que distribuir por una vía de
+confianza, como Google Play. El aviso de instalación lateral es independiente de la firma.
+
+La compilación y la conexión con el Samsung S26 Ultra aún deben probarse. No se garantiza que el
+cambio del escáner resuelva el problema hasta probar el APK resultante.

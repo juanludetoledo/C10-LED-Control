@@ -1,0 +1,18 @@
+CÓMO COMPILAR EL APK DESDE GITHUB
+
+1. Descomprime este ZIP.
+2. Copia la carpeta oculta .github dentro de la raíz del repositorio C10 LED Control (al mismo nivel que app, build.gradle.kts y settings.gradle.kts).
+   Si Windows no muestra .github, activa Ver > Mostrar > Elementos ocultos.
+3. Sube también el resto de archivos del proyecto que vengan en el ZIP, sustituyendo los archivos equivalentes SOLO si quieres que el repositorio use esta versión del proyecto.
+   IMPORTANTE: el código MainActivity.kt de este paquete es el código de diagnóstico BLE preparado; todavía no se ha validado con un APK ejecutado en el Samsung.
+4. En GitHub, abre el repositorio y entra en Actions.
+5. Si aparece el aviso para habilitar Actions, actívalo.
+6. El workflow "Build C10 LED Control APK" se ejecuta al hacer push a main. También puedes abrirlo y pulsar Run workflow.
+7. Cuando termine en verde, entra en la ejecución, baja a Artifacts y descarga C10-LED-Control-debug-APK.
+8. Descomprime el artefacto y encontrarás app-debug.apk.
+
+Notas:
+- El APK debug está firmado con una clave de depuración temporal de la compilación. No es apropiado para una distribución pública estable.
+- Si se vuelve a compilar con una clave diferente, Android puede impedir actualizar la app encima de una instalación anterior; podría ser necesario desinstalar la anterior (eso borra sus datos).
+- Para publicar/distribuir a clientes de forma fiable, conviene configurar una clave de firma privada guardada como GitHub Secrets. No subas la clave ni contraseñas al repositorio.
+- El workflow compila; no garantiza que el escaneo BLE funcione. Hay que probar el APK en el Samsung S26 Ultra.
