@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -176,8 +177,15 @@ class MainActivity : Activity() {
             return
         }
         try {
-            scanner.startScan(scanCallback)
-            showStatus("Escaneo BLE iniciado. Buscando dispositivos…", Color.rgb(255, 190, 70))
+            // Escaneo explícito en baja latencia y sin filtros: útil para diagnosticar
+            // móviles que no entregan resultados con la configuración predeterminada.
+            val scanSettings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                .setReportDelay(0L)
+                .build()
+            scanner.startScan(null, scanSettings, scanCallback)
+            showStatus("Escaneo BLE activo (búsqueda completa)…", Color.rgb(255, 190, 70))
             handler.postDelayed({
                 if (scanning) {
                     try { scanner.stopScan(scanCallback) } catch (_: Exception) {}
@@ -225,7 +233,10 @@ class MainActivity : Activity() {
                 showStatus("Encontrada: ${name ?: "sin nombre"} · Conectando…", Color.rgb(255, 190, 70))
                 connectGatt(device)
             } else {
-                showStatus("Buscando… Detectado: ${name ?: "sin nombre"} · $address", Color.LTGRAY)
+                showStatus(
+                    "BLE detectado: ${name ?: "sin nombre"} · $address · RSSI ${result.rssi} dBm",
+                    Color.LTGRAY
+                )
             }
         }
     }
@@ -240,7 +251,16 @@ class MainActivity : Activity() {
             scanning = false
             handler.post {
                 connectButton.isEnabled = true
-                showStatus("Android ha fallado el escaneo BLE. Código: $errorCode", Color.RED)
+                val detail = when (errorCode) {
+                    ScanCallback.SCAN_FAILED_ALREADY_STARTED -> "escaneo ya iniciado"
+                    ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> "registro de la aplicación fallido"
+                    ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> "error interno de Bluetooth"
+                    ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> "función BLE no compatible"
+                    ScanCallback.SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES -> "recursos Bluetooth agotados"
+                    ScanCallback.SCAN_FAILED_SCANNING_TOO_FREQUENTLY -> "demasiados escaneos seguidos"
+                    else -> "error desconocido"
+                }
+                showStatus("Error escaneo BLE $errorCode: $detail", Color.RED)
             }
         }
     }
