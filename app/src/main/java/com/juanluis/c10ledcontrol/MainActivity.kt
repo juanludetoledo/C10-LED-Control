@@ -45,6 +45,7 @@ class MainActivity : Activity() {
     private var statusCharacteristic: BluetoothGattCharacteristic? = null
     private var connected = false
     private var scanning = false
+    private var scanResultCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,6 +128,24 @@ class MainActivity : Activity() {
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 100)
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100) {
+            val granted = grantResults.isNotEmpty() &&
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            if (granted) {
+                showStatus("Permisos concedidos. Pulsa CONECTAR.", Color.rgb(80, 200, 120))
+            } else {
+                showStatus("Faltan permisos Bluetooth. Revisa Permisos de la aplicación.", Color.RED)
+                connectButton.isEnabled = true
+            }
+        }
+    }
+
     private fun bluetoothAdapter(): BluetoothAdapter? {
         val manager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         return manager.adapter
@@ -145,9 +164,10 @@ class MainActivity : Activity() {
         }
         if (scanning) return
         disconnectGatt()
-        showStatus("Buscando $deviceName…", Color.rgb(255, 190, 70))
+        showStatus("Preparando escaneo Bluetooth BLE…", Color.rgb(255, 190, 70))
         connectButton.isEnabled = false
         scanning = true
+        scanResultCount = 0
         val scanner = adapter.bluetoothLeScanner
         if (scanner == null) {
             scanning = false
@@ -157,23 +177,34 @@ class MainActivity : Activity() {
         }
         try {
             scanner.startScan(scanCallback)
+            showStatus("Escaneo BLE iniciado. Buscando dispositivos…", Color.rgb(255, 190, 70))
             handler.postDelayed({
                 if (scanning) {
                     try { scanner.stopScan(scanCallback) } catch (_: Exception) {}
                     scanning = false
                     connectButton.isEnabled = true
-                    if (!connected) showStatus("No encontrado. Acércate y vuelve a conectar.", Color.rgb(255, 190, 70))
+                    if (!connected) {
+                        showStatus(
+                            "Fin del escaneo: $scanResultCount dispositivos detectados. No se encontró $deviceName.",
+                            Color.rgb(255, 190, 70)
+                        )
+                    }
                 }
             }, 12000)
         } catch (e: SecurityException) {
             scanning = false
             connectButton.isEnabled = true
-            showStatus("Permiso Bluetooth denegado", Color.RED)
+            showStatus("Error de permisos al iniciar escaneo BLE", Color.RED)
+        } catch (e: Exception) {
+            scanning = false
+            connectButton.isEnabled = true
+            showStatus("No se pudo iniciar el escaneo: ${e.javaClass.simpleName}", Color.RED)
         }
     }
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
+        scanResultCount++
         val device = result.device
         val name = try {
             device.name ?: result.scanRecord?.deviceName
@@ -199,11 +230,17 @@ class MainActivity : Activity() {
         }
     }
 
+        override fun onBatchScanResults(results: MutableList<ScanResult>) {
+            for (result in results) {
+                onScanResult(0, result)
+            }
+        }
+
         override fun onScanFailed(errorCode: Int) {
             scanning = false
             handler.post {
                 connectButton.isEnabled = true
-                showStatus("Error al buscar Bluetooth ($errorCode)", Color.RED)
+                showStatus("Android ha fallado el escaneo BLE. Código: $errorCode", Color.RED)
             }
         }
     }
