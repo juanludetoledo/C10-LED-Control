@@ -55,9 +55,9 @@ class BleController(private val ctx: Context) {
 
     @SuppressLint("MissingPermission")
     fun conectar() {
-        val ad = adapter ?: run { mensaje = "Este móvil no tiene Bluetooth"; return }
-        if (!ad.isEnabled) { mensaje = "Activa el Bluetooth"; return }
-        val scanner = ad.bluetoothLeScanner ?: run { mensaje = "Escáner BLE no disponible"; return }
+        val ad = adapter ?: run { mensaje = "m_nobt"; return }
+        if (!ad.isEnabled) { mensaje = "m_btoff"; return }
+        val scanner = ad.bluetoothLeScanner ?: run { mensaje = "m_noscan"; return }
         if (scanning || conn == Conn.CONECTADO) return
 
         mensaje = ""
@@ -71,7 +71,7 @@ class BleController(private val ctx: Context) {
             if (scanning) {
                 pararScan()
                 conn = Conn.DESCONECTADO
-                mensaje = "No se encontró C10_LED_CONTROL"
+                mensaje = "m_notfound"
             }
         }, 10_000)
     }
@@ -95,7 +95,7 @@ class BleController(private val ctx: Context) {
 
         override fun onScanFailed(errorCode: Int) {
             scanning = false
-            main.post { conn = Conn.DESCONECTADO; mensaje = "Error de escaneo ($errorCode)" }
+            main.post { conn = Conn.DESCONECTADO; mensaje = "m_scanerr:$errorCode" }
         }
     }
 
@@ -118,7 +118,7 @@ class BleController(private val ctx: Context) {
             commandChar = servicio?.getCharacteristic(COMMAND_UUID)
             val st = servicio?.getCharacteristic(STATUS_UUID)
             if (commandChar == null || st == null) {
-                main.post { mensaje = "Servicio BLE no encontrado"; }
+                main.post { mensaje = "m_nosvc"; }
                 g.disconnect()
                 return
             }
@@ -193,6 +193,24 @@ class BleController(private val ctx: Context) {
         }
     }
 
+    /** Escritura sin respuesta: para el deslizador de brillo (muchas ordenes seguidas). */
+    @SuppressLint("MissingPermission")
+    fun enviarRapido(cmd: String) {
+        val g = gatt ?: return
+        val c = commandChar ?: return
+        val bytes = cmd.toByteArray(Charsets.UTF_8)
+        if (Build.VERSION.SDK_INT >= 33) {
+            g.writeCharacteristic(c, bytes, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+        } else {
+            @Suppress("DEPRECATION")
+            c.value = bytes
+            @Suppress("DEPRECATION")
+            c.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+            @Suppress("DEPRECATION")
+            g.writeCharacteristic(c)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun desconectar() {
         pararScan()
@@ -206,6 +224,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        I18n.iniciar(applicationContext)
         ble = BleController(applicationContext)
         setContent { C10App(ble) }
     }
