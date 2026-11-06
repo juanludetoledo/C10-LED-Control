@@ -42,12 +42,12 @@ import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-private val Bg = Color(0xFF0C0E13)
-private val Muted = Color(0xFF8C93A3)
-private val Ambar = Color(0xFFFFC94D)
-private val AmbarB = Color(0xFFFF9F1C)
-private val TxtAmbar = Color(0xFF2A1700)
-private val Line = Color(0x2EFFFFFF)
+private val Bg = Color(0xFF080C14)
+private val Muted = Color(0xFF9BA9BD)
+private val Acento = Color(0xFF38BDF8)
+private val AcentoB = Color(0xFF2563EB)
+private val TxtAcento = Color.White
+private val Line = Color(0x2B94A3B8)
 private val Condensada = FontFamily(android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.BOLD))
 private val Txt = Color(0xFFF4F7FB)
 
@@ -175,11 +175,11 @@ fun C10App(ble: BleController) {
     }
 
     MaterialTheme(colorScheme = darkColorScheme(
-        background = Bg, surface = Bg, primary = Ambar, onPrimary = TxtAmbar,
-        secondary = Ambar, tertiary = Ambar, primaryContainer = Color(0xFF3A2A0A), onPrimaryContainer = Ambar
+        background = Bg, surface = Bg, primary = Acento, onPrimary = TxtAcento,
+        secondary = Acento, tertiary = Acento, primaryContainer = Color(0xFF0C4A6E), onPrimaryContainer = Acento
     )) {
         Surface(
-            modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1A1E29), Color(0xFF0C0E13), Color(0xFF090B10)))),
+            modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0F1A2E), Color(0xFF080C14), Color(0xFF070A11)))),
             color = Color.Transparent
         ) {
             Column(
@@ -198,7 +198,7 @@ fun C10App(ble: BleController) {
                     Column(Modifier.weight(1f)) {
                         Text("BARRA", color = Muted, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.5.sp)
                         Text(
-                            "C10 LED", color = Ambar, fontSize = 34.sp, fontFamily = Condensada, letterSpacing = 1.2.sp,
+                            "C10 LED", color = Acento, fontSize = 34.sp, fontFamily = Condensada, letterSpacing = 1.2.sp,
                             modifier = Modifier.clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) {
                                 val ahora = System.currentTimeMillis()
                                 val l = toques.filter { ahora - it < 3000 } + ahora
@@ -229,7 +229,7 @@ fun C10App(ble: BleController) {
                 // ---- Pestanas ----
                 Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("tab_ctl", "tab_fx", "tab_set", "tab_sys").forEachIndexed { i, k ->
-                        Chip(t(k), pestana == i, Modifier.weight(1f)) { pestana = i }
+                        Chip(t(k), pestana == i, Modifier.weight(1f), unaLinea = true) { pestana = i }
                     }
                 }
 
@@ -265,7 +265,7 @@ fun C10App(ble: BleController) {
                         Tarjeta {
                             Etiq(t("b_title"))
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("${(brillo / 10.0).roundToInt()}", color = Ambar, fontSize = 54.sp, fontWeight = FontWeight.ExtraBold)
+                                Text("${(brillo / 10.0).roundToInt()}", color = Acento, fontSize = 54.sp, fontWeight = FontWeight.ExtraBold)
                                 Text("0 – 100", color = Muted, fontSize = 11.sp)
                             }
                             Slider(
@@ -497,7 +497,7 @@ fun C10App(ble: BleController) {
                 // =============================== TECNICA (oculta) ===============================
                 if (tecnica) {
                     Spacer(Modifier.height(14.dp))
-                    Tarjeta(borde = Ambar) {
+                    Tarjeta(borde = Acento) {
                         Etiq(t("te_title"))
                         Nota(t("te_hint"))
                         Text(t("te_scale"), color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -554,7 +554,7 @@ fun C10App(ble: BleController) {
 private fun Tarjeta(borde: Color = Line, content: @Composable ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp))
-            .background(Brush.linearGradient(listOf(Color(0xF0222631), Color(0xF00C0E13))))
+            .background(Brush.linearGradient(listOf(Color(0xF7131D2E), Color(0xFA0C121E))))
             .border(1.dp, borde, RoundedCornerShape(22.dp)).padding(18.dp),
         content = content
     )
@@ -610,19 +610,20 @@ private fun Tarjeta(borde: Color = Line, content: @Composable ColumnScope.() -> 
 }
 
 @Composable
-private fun Chip(texto: String, activo: Boolean, modifier: Modifier = Modifier, alto: Int = 0, onClick: () -> Unit) {
+private fun Chip(texto: String, activo: Boolean, modifier: Modifier = Modifier, alto: Int = 0, unaLinea: Boolean = false, onClick: () -> Unit) {
     Box(
         modifier
             .then(if (alto > 0) Modifier.height(alto.dp) else Modifier)
             .clip(RoundedCornerShape(50))
-            .background(if (activo) Color(0xFF3A2A0A) else Color(0xFF12151C))
-            .border(1.dp, if (activo) Ambar else Line, RoundedCornerShape(50))
+            .background(if (activo) Color(0xFF0C4A6E) else Color(0xFF0D1421))
+            .border(1.dp, if (activo) Acento else Line, RoundedCornerShape(50))
             .clickable { onClick() }
-            .padding(horizontal = 11.dp, vertical = 9.dp),
+            .padding(horizontal = if (unaLinea) 3.dp else 11.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(texto, color = if (activo) Ambar else Muted, fontSize = 11.5.sp,
-            fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, maxLines = 2)
+        Text(texto, color = if (activo) Color(0xFFE0F2FE) else Muted, fontSize = if (unaLinea) 10.5.sp else 11.5.sp,
+            fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center,
+            maxLines = if (unaLinea) 1 else 2, softWrap = !unaLinea)
     }
 }
 
@@ -633,13 +634,13 @@ private fun Boton(
 ) {
     val forma = RoundedCornerShape(50)
     val fondo: Brush = when {
-        !enabled -> Brush.linearGradient(listOf(Color(0xFF12151C), Color(0xFF12151C)))
-        peligro -> Brush.linearGradient(listOf(Color(0xFF2B161B), Color(0xFF2B161B)))
-        principal -> Brush.horizontalGradient(listOf(Color(0xFFFFD166), AmbarB))
-        else -> Brush.linearGradient(listOf(Color(0xFF1B202B), Color(0xFF161A23)))
+        !enabled -> Brush.linearGradient(listOf(Color(0xFF0D1421), Color(0xFF0D1421)))
+        peligro -> Brush.linearGradient(listOf(Color(0xFF3B0D18), Color(0xFF3B0D18)))
+        principal -> Brush.horizontalGradient(listOf(Color(0xFF0EA5E9), AcentoB))
+        else -> Brush.linearGradient(listOf(Color(0xFF15213A), Color(0xFF15213A)))
     }
-    val borde = when { !enabled -> Line; peligro -> Color(0x80E5484D); principal -> Color.Transparent; else -> Line }
-    val colorTxt = when { !enabled -> Muted; peligro -> Color(0xFFFF8A95); principal -> TxtAmbar; else -> Color(0xFFE5EAF3) }
+    val borde = when { !enabled -> Line; peligro -> Color(0xFF9F1239); principal -> Color.Transparent; else -> Line }
+    val colorTxt = when { !enabled -> Muted; peligro -> Color(0xFFFECDD3); principal -> TxtAcento; else -> Color(0xFFE5EDF8) }
     Box(
         modifier.height(if (pequeno) 34.dp else 44.dp).clip(forma)
             .background(fondo)
@@ -675,14 +676,14 @@ private fun BigButton(
     icono: ImageVector, enabled: Boolean, onClick: () -> Unit
 ) {
     val forma = RoundedCornerShape(26.dp)
-    val fondo = if (encendido) Brush.horizontalGradient(listOf(Color(0xFFFFD166), AmbarB))
-                else Brush.linearGradient(listOf(Color(0xFF2B161B), Color(0xFF2B161B)))
-    val colorIc = if (encendido) TxtAmbar else Color(0xFFFF6B78)
-    val colorTxt = if (encendido) TxtAmbar else Color(0xFFFF8A95)
+    val fondo = if (encendido) Brush.linearGradient(listOf(Color(0xFF16A34A), Color(0xFF166534)))
+                else Brush.linearGradient(listOf(Color(0xFFE11D48), Color(0xFF9F1239)))
+    val colorIc = Color.White
+    val colorTxt = Color.White
     Column(
         modifier.height(96.dp).clip(forma)
             .background(fondo)
-            .border(1.dp, if (encendido) Color.Transparent else Color(0x80E5484D), forma)
+            .border(1.dp, Color.Transparent, forma)
             .clickable(enabled = enabled) { onClick() }
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
@@ -701,7 +702,7 @@ private fun BigButton(
         val gap = 3.dp.toPx()
         val w = (size.width - gap * 8) / 9
         for (i in 0 until 9) {
-            drawRoundRect(Ambar.copy(alpha = al[i]), androidx.compose.ui.geometry.Offset(i * (w + gap), 0f),
+            drawRoundRect(Acento.copy(alpha = al[i]), androidx.compose.ui.geometry.Offset(i * (w + gap), 0f),
                 androidx.compose.ui.geometry.Size(w, size.height), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
         }
     }

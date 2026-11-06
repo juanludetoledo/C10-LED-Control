@@ -7,7 +7,7 @@
     android:gravity="center_vertical"
     android:background="@drawable/w_bg_fondo"
     android:paddingStart="14dp"
-    android:paddingEnd="6dp"
+    android:paddingEnd="8dp"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
 
@@ -49,32 +49,32 @@
 
     <TextView
         android:id="@+id/w_off"
-        android:layout_width="62dp"
-        android:layout_height="34dp"
-        android:layout_marginEnd="6dp"
+        android:layout_width="84dp"
+        android:layout_height="46dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/w_bg_off"
         android:gravity="center"
         android:drawableStart="@drawable/w_ic_power_off"
-        android:drawablePadding="3dp"
+        android:drawablePadding="4dp"
         android:paddingStart="9dp"
         android:paddingEnd="10dp"
         android:text="OFF"
         android:textColor="#FF8A95"
-        android:textSize="12sp"
+        android:textSize="15sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/w_on"
-        android:layout_width="62dp"
-        android:layout_height="34dp"
+        android:layout_width="84dp"
+        android:layout_height="46dp"
         android:background="@drawable/w_bg_on"
         android:gravity="center"
         android:drawableStart="@drawable/w_ic_power_on"
-        android:drawablePadding="3dp"
+        android:drawablePadding="4dp"
         android:paddingStart="11dp"
         android:paddingEnd="12dp"
         android:text="ON"
         android:textColor="#2A1700"
-        android:textSize="12sp"
+        android:textSize="15sp"
         android:textStyle="bold" />
 </LinearLayout>
