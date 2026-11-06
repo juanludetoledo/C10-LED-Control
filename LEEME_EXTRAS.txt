@@ -1,0 +1,14 @@
+C10LED v2.1-extras (OPCIONAL) - widget + pantalla sencilla para Android Auto
+=========================================================================
+Es el proyecto 2.0 con dos añadidos. Pruebe primero el 2.0 base; este es aparte.
+
+WIDGET (pantalla de inicio): mantener pulsado el escritorio > Widgets > C10LED. Botones OFF y ON.
+ANDROID AUTO (solo parado): lista con Control (Encender/Apagar), Brillo (20,40,60,66,80,100)
+  y Shows (9 temas + Parar). No hay deslizador: el brillo va en presets.
+  Hace falta modo desarrollador en Android Auto + "Fuentes desconocidas".
+
+IMPORTANTE
+- La centralita admite un solo móvil BLE: al abrir la pantalla de Android Auto, o al pulsar el widget,
+  la app principal se cierra sola y suelta la centralita.
+- Usan la última centralita con la que se conectó la app principal (la app debe haberse conectado una vez).
+- NO compilado ni probado todavía (no hay Android SDK aquí). Se compila igual que el 2.0 (GitHub Actions).

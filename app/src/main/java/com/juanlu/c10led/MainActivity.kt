@@ -450,8 +450,24 @@ class BleController(private val ctx: Context) {
 class MainActivity : ComponentActivity() {
     private lateinit var ble: BleController
 
+    companion object {
+        @Volatile private var instancia: MainActivity? = null
+
+        /**
+         * Android Auto y el widget necesitan la centralita libre (solo admite un movil a la vez):
+         * si la app principal esta abierta (aunque sea en segundo plano), se cierra y suelta el Bluetooth.
+         * Devuelve true si habia una app abierta.
+         */
+        fun cerrarPorCoche(): Boolean {
+            val a = instancia ?: return false
+            a.runOnUiThread { try { a.finishAndRemoveTask() } catch (e: Exception) { } }
+            return true
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        instancia = this
         I18n.iniciar(applicationContext)
         ble = BleController(applicationContext)
         Auto.programar(applicationContext)     // alarmas y vigilancia en segundo plano (mejor esfuerzo)
@@ -460,6 +476,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         ble.desconectar()
+        if (instancia === this) instancia = null
         super.onDestroy()
     }
 }
