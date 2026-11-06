@@ -35,6 +35,7 @@ private val SERVICE_UUID: UUID = UUID.fromString("5b8f0001-7a2d-4c61-9b21-7c10c1
 private val COMMAND_UUID: UUID = UUID.fromString("5b8f0002-7a2d-4c61-9b21-7c10c10a0001")
 private val STATUS_UUID: UUID = UUID.fromString("5b8f0003-7a2d-4c61-9b21-7c10c10a0001")
 private val METER_UUID: UUID = UUID.fromString("5b8f0004-7a2d-4c61-9b21-7c10c10a0001")
+private val VIVO_UUID: UUID = UUID.fromString("5b8f0005-7a2d-4c61-9b21-7c10c10a0001")
 private val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 enum class Conn { DESCONECTADO, BUSCANDO, CONECTANDO, CONECTADO }
@@ -48,6 +49,7 @@ class BleController(private val ctx: Context) {
     var conn by mutableStateOf(Conn.DESCONECTADO)
     var estado by mutableStateOf<EstadoC?>(null)
     var medidor by mutableIntStateOf(0)
+    var vivo by mutableStateOf(IntArray(34))      // vista en vivo de la barra (0..255 por canal)
     var mensaje by mutableStateOf("")
     var registro by mutableStateOf("")
     private val cola = ArrayDeque<String>()
@@ -290,6 +292,7 @@ class BleController(private val ctx: Context) {
             commandChar = cmd
             g.setCharacteristicNotification(st, true)
             servicio.getCharacteristic(METER_UUID)?.let { g.setCharacteristicNotification(it, true) }
+            servicio.getCharacteristic(VIVO_UUID)?.let { g.setCharacteristicNotification(it, true) }
             st.getDescriptor(CCCD_UUID)?.let { d ->
                 if (Build.VERSION.SDK_INT >= 33) {
                     g.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
@@ -309,21 +312,10 @@ class BleController(private val ctx: Context) {
 
         @SuppressLint("MissingPermission")
         override fun onDescriptorWrite(g: BluetoothGatt, d: BluetoothGattDescriptor, status: Int) {
-            if (d.characteristic.uuid == STATUS_UUID) {
-                // Siguiente: avisos del medidor del sensor (si el sketch los tiene).
-                val m = g.getService(SERVICE_UUID)?.getCharacteristic(METER_UUID)
-                val dm = m?.getDescriptor(CCCD_UUID)
-                if (m != null && dm != null) {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        g.writeDescriptor(dm, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        dm.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                        @Suppress("DEPRECATION")
-                        g.writeDescriptor(dm)
-                    }
-                    return
-                }
+            // Cadena de avisos: estado -> medidor del sensor -> vista en vivo (si el sketch los tiene) -> leer estado.
+            when (d.characteristic.uuid) {
+                STATUS_UUID -> if (habilitar(g, METER_UUID) || habilitar(g, VIVO_UUID)) return
+                METER_UUID -> if (habilitar(g, VIVO_UUID)) return
             }
             leerEstado(g)
         }
@@ -348,7 +340,9 @@ class BleController(private val ctx: Context) {
         @Deprecated("Android < 13")
         override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic) {
             if (Build.VERSION.SDK_INT < 33) {
-                if (c.uuid == STATUS_UUID) actualizarEstado(c.value) else if (c.uuid == METER_UUID) actualizarMedidor(c.value)
+                if (c.uuid == STATUS_UUID) actualizarEstado(c.value)
+                else if (c.uuid == METER_UUID) actualizarMedidor(c.value)
+                else if (c.uuid == VIVO_UUID) actualizarVivo(c.value)
             }
         }
 
@@ -357,6 +351,23 @@ class BleController(private val ctx: Context) {
         ) {
             if (c.uuid == STATUS_UUID) actualizarEstado(value)
             else if (c.uuid == METER_UUID) actualizarMedidor(value)
+            else if (c.uuid == VIVO_UUID) actualizarVivo(value)
+        }
+
+        @SuppressLint("MissingPermission")
+        private fun habilitar(g: BluetoothGatt, uuid: UUID): Boolean {
+            val c = g.getService(SERVICE_UUID)?.getCharacteristic(uuid) ?: return false
+            val dd = c.getDescriptor(CCCD_UUID) ?: return false
+            g.setCharacteristicNotification(c, true)
+            if (Build.VERSION.SDK_INT >= 33) {
+                g.writeDescriptor(dd, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+            } else {
+                @Suppress("DEPRECATION")
+                dd.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                @Suppress("DEPRECATION")
+                g.writeDescriptor(dd)
+            }
+            return true
         }
     }
 
@@ -374,6 +385,12 @@ class BleController(private val ctx: Context) {
             if (e != null && e.v.isNotEmpty()) releido = false
             else if (!releido) { releido = true; gatt?.let { leerEstado(it) } }
         }
+    }
+
+    private fun actualizarVivo(v: ByteArray?) {
+        if (v == null || v.size < 34) return
+        val a = IntArray(34) { v[it].toInt() and 0xFF }
+        main.post { vivo = a }
     }
 
     private fun actualizarMedidor(v: ByteArray?) {
@@ -455,7 +472,7 @@ internal fun permisosNecesarios(): Array<String> =
 
 /** Estado de la centralita (texto "NORMAL;n=655;e=15;..." del sketch). */
 data class EstadoC(
-    val off: Boolean = false, val n: Int = 655, val e: Int = 15, val r: Int = 45, val p: Int = 1,
+    val off: Boolean = false, val n: Int = 655, val e: Int = 15, val r: Int = 45, val rn: Int = 314, val rx: Int = 730, val p: Int = 1,
     val k: Int = 5, val w: Int = 1, val d: Int = 655, val m: Boolean = false, val o: Boolean = false,
     val h: Int = 0, val b: Boolean = true, val v: String = ""
 ) {
@@ -470,7 +487,7 @@ data class EstadoC(
             }
             fun i(k: String, def: Int) = mp[k]?.toIntOrNull() ?: def
             return EstadoC(
-                off = partes[0] == "OFF", n = i("n", 655), e = i("e", 15), r = i("r", 45), p = i("p", 1),
+                off = partes[0] == "OFF", n = i("n", 655), e = i("e", 15), r = i("r", 45), rn = i("rn", 314), rx = i("rx", 730), p = i("p", 1),
                 k = i("k", 5), w = i("w", 1), d = i("d", 655), m = i("m", 0) != 0, o = i("o", 0) != 0,
                 h = i("h", 0), b = i("b", 1) != 0, v = mp["v"] ?: ""
             )

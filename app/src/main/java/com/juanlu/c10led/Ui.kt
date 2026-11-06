@@ -52,7 +52,7 @@ private val Txt = Color(0xFFF4F7FB)
 private fun pwmDe(v: Int): Int =
     if (v == 655) 0x0650 else (4095.0 * (v / 1000.0).pow(2.2)).roundToInt().coerceIn(3, 4095)
 
-private data class Ajustes(val e: Int, val r: Int, val p: Int, val k: Int, val w: Int, val d: Int)
+private data class Ajustes(val e: Int, val r: Int, val p: Int, val k: Int, val w: Int, val d: Int, val rn: Int, val rx: Int)
 
 @Composable
 fun C10App(ble: BleController) {
@@ -124,12 +124,26 @@ fun C10App(ble: BleController) {
     var aj by remember { mutableStateOf<Ajustes?>(null) }
     LaunchedEffect(est != null) {
         val e = ble.estado
-        if (aj == null && e != null) aj = Ajustes(e.e, e.r, e.p, e.k, e.w, e.d)
+        if (aj == null && e != null) aj = Ajustes(e.e, e.r, e.p, e.k, e.w, e.d, e.rn, e.rx)
+    }
+    // Al pulsar ON la centralita vuelve a sus ajustes guardados: la pantalla de ajustes se vuelve a leer.
+    var ajReinit by remember { mutableStateOf(0) }
+    LaunchedEffect(ajReinit) {
+        if (ajReinit > 0) {
+            delay(900)
+            val e = ble.estado
+            if (e != null) aj = Ajustes(e.e, e.r, e.p, e.k, e.w, e.d, e.rn, e.rx)
+        }
     }
     var avisoAj by remember { mutableStateOf("") }
     var confirmarReset by remember { mutableStateOf(false) }
     var recordarOff by remember { mutableStateOf(ctx.getSharedPreferences("c10prefs", 0).getBoolean("rem_off", false)) }
     var duracionShow by rememberSaveable { mutableStateOf(0) }
+
+    // Vista en vivo de la barra: se pide mientras se ven las pestanas Control o Efectos.
+    LaunchedEffect(conectado, pestana) {
+        while (conectado && (pestana == 0 || pestana == 1)) { ble.enviar("LIVE:1"); delay(8000) }
+    }
 
     // Medidor del sensor: se pide mientras se ve la pestana de ajustes o la pantalla tecnica.
     LaunchedEffect(conectado, pestana, tecnica) {
@@ -225,7 +239,7 @@ fun C10App(ble: BleController) {
                                     ble.enviar(if (recordarOff) "OFFSAVE" else "OFF")
                                 }
                                 BigButton(Modifier.weight(1f), t("on_t"), t("on_s"), Color(0xFF2BD576), Color(0xFF12844A), Icons.Filled.PowerSettingsNew, conectado) {
-                                    ble.enviar("ON")
+                                    ble.enviar("ON"); avisoAj = ""; ajReinit++
                                 }
                             }
                             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.Top) {
@@ -285,6 +299,8 @@ fun C10App(ble: BleController) {
                             Nota(t("b_range"))
                         }
                         Spacer(Modifier.height(12.dp))
+                        TarjetaVivo(ble)
+                        Spacer(Modifier.height(12.dp))
                         Tarjeta {
                             Etiq(t("sc_title"))
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -325,6 +341,8 @@ fun C10App(ble: BleController) {
                     }
                     // =============================== EFECTOS ===============================
                     1 -> {
+                        TarjetaVivo(ble)
+                        Spacer(Modifier.height(12.dp))
                         Tarjeta {
                             Etiq(t("fx_title"))
                             Nota(t("fx_desc"))
@@ -357,6 +375,7 @@ fun C10App(ble: BleController) {
                         val a = aj
                         Tarjeta {
                             Etiq(t("se_title"))
+                            Aviso(t("se_warn"))
                             Nota(t("se_desc"))
                             if (a == null) {
                                 Nota(t("s_nocon"))
@@ -373,6 +392,17 @@ fun C10App(ble: BleController) {
                                     aj = a.copy(r = if (v in 1..9) 10 else v)
                                 }, valueRange = 0f..600f)
                                 Nota(t("se_breath0"))
+                                FilaValor(t("se_rmin"), "${(a.rn / 10f).roundToInt()}")
+                                Slider(value = a.rn / 10f, onValueChange = {
+                                    val v = (it.roundToInt() * 10).coerceIn(10, 980)
+                                    aj = a.copy(rn = v, rx = maxOf(a.rx, v + 10))
+                                }, valueRange = 1f..98f)
+                                FilaValor(t("se_rmax"), "${(a.rx / 10f).roundToInt()}")
+                                Slider(value = a.rx / 10f, onValueChange = {
+                                    val v = (it.roundToInt() * 10).coerceIn(20, 1000)
+                                    aj = a.copy(rx = v, rn = minOf(a.rn, v - 10))
+                                }, valueRange = 2f..100f)
+                                Nota(t("se_rminmax_h"))
                                 Text(t("se_pp"), color = Txt, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Boton(t("se_pp_off"), Modifier.weight(1f), principal = a.p == 0, pequeno = true) { aj = a.copy(p = 0) }
@@ -402,7 +432,9 @@ fun C10App(ble: BleController) {
                                 }
                                 Boton(t("se_preview"), Modifier.fillMaxWidth(), enabled = conectado) { ble.enviar("WPLAY:${a.w}") }
                                 Spacer(Modifier.height(14.dp))
-                                fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d}"
+                                Aviso(t("se_warn_save"))
+                                Spacer(Modifier.height(8.dp))
+                                fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d},${a.rn},${a.rx}"
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Boton(t("se_test"), Modifier.weight(1f), enabled = conectado) { ble.enviar(cmdSet()); avisoAj = t("se_tried") }
                                     Boton(t("se_save"), Modifier.weight(1f), enabled = conectado, principal = true) {
@@ -523,6 +555,34 @@ private fun Tarjeta(borde: Color = Line, content: @Composable ColumnScope.() -> 
 
 @Composable private fun Etiq(x: String) {
     Text(x, color = Muted, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.4.sp, modifier = Modifier.padding(bottom = 12.dp))
+}
+
+@Composable private fun Aviso(x: String) {
+    Box(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF33250A)).border(1.dp, Color(0xFFFBBF24), RoundedCornerShape(12.dp)).padding(11.dp)
+    ) { Text(x, color = Color(0xFFFDE68A), fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 18.sp) }
+}
+
+/** Dibujo en vivo de la barra: 34 segmentos con el brillo real de cada canal. */
+@Composable private fun TarjetaVivo(ble: BleController) {
+    Tarjeta {
+        Etiq(t("lv_title"))
+        val v = ble.vivo
+        androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(46.dp).padding(top = 8.dp)) {
+            val n = 34
+            val gap = 3.dp.toPx()
+            val w = (size.width - gap * (n - 1)) / n
+            for (i in 0 until n) {
+                val b = v[i].coerceIn(0, 255)
+                val col = if (b < 6) Color(0xFF0A111D) else Color(b / 255f, (b * 0.86f) / 255f, (b * 0.62f) / 255f)
+                drawRoundRect(col, androidx.compose.ui.geometry.Offset(i * (w + gap), 0f),
+                    androidx.compose.ui.geometry.Size(w, size.height),
+                    androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+            }
+        }
+        Nota(t("lv_note"))
+    }
 }
 
 @Composable private fun Nota(x: String) {

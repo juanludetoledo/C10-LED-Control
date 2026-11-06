@@ -62,7 +62,7 @@ object I18n {
         "off_t" to arrayOf("OFF · APAGAR BARRA", "OFF · TURN BAR OFF", "OFF · DESLIGAR BARRA", "关闭 · 关灯条"),
         "off_s" to arrayOf("Bloqueo manual", "Manual lock", "Bloqueio manual", "手动锁定"),
         "on_t" to arrayOf("ON · MODO NORMAL", "ON · NORMAL MODE", "ON · MODO NORMAL", "开启 · 正常模式"),
-        "on_s" to arrayOf("Reactivar control", "Resume control", "Reativar controle", "恢复控制"),
+        "on_s" to arrayOf("Reinicio limpio", "Clean restart", "Reinício limpo", "干净重启"),
         "hold" to arrayOf("El bloqueo manual se mantiene hasta que pulses ON.", "The manual lock stays until you press ON.", "O bloqueio manual permanece até você tocar em ON.", "手动锁定会一直保持,直到您点按“开启”。"),
         "b_title" to arrayOf("Brillo", "Brightness", "Brilho", "亮度"),
         "b_desc" to arrayOf("La barra queda fija en el brillo elegido. Al apagar y encender el coche vuelve al brillo de arranque.", "The bar stays fixed at the chosen brightness. After switching the car off and on it returns to the start-up level.", "A barra fica fixa no brilho escolhido. Ao desligar e ligar o carro volta ao brilho de arranque.", "灯条保持在所选亮度。熄火再启动后将恢复启动亮度。"),
@@ -194,6 +194,18 @@ object I18n {
         "sc_sol_hint" to arrayOf("DÍA va del amanecer al atardecer y NOCHE del atardecer al amanecer, según el lugar donde esté el móvil. Se calcula en el propio móvil y se actualiza al viajar.", "DAY runs from sunrise to sunset and NIGHT from sunset to sunrise, wherever the phone is. It is calculated on the phone and updates as you travel.", "DIA vai do nascer ao pôr do sol e NOITE do pôr ao nascer do sol, onde o telemóvel estiver. Calcula-se no próprio telemóvel e atualiza-se ao viajar.", "白天为日出到日落,夜间为日落到日出,以手机所在位置为准。在手机上本地计算,旅行时自动更新。"),
         "se_pp_cl" to arrayOf("Clásico", "Classic", "Clássico", "经典"),
         "se_pp_co" to arrayOf("Cometa", "Comet", "Cometa", "彗星"),
+        "lv_title" to arrayOf("Vista en vivo de la barra", "Live view of the bar", "Vista em direto da barra", "灯条实时画面"),
+        "lv_note" to arrayOf("Muestra lo que está haciendo la barra en este momento (solo con la conexión activa).", "Shows what the bar is doing right now (only while connected).", "Mostra o que a barra está a fazer neste momento (só com a ligação ativa).", "显示灯条此刻的状态(仅在连接时)。"),
+        "se_rmin" to arrayOf("Respiración: brillo mínimo", "Breathing: minimum brightness", "Respiração: brilho mínimo", "呼吸:最低亮度"),
+        "se_rmax" to arrayOf("Respiración: brillo máximo", "Breathing: maximum brightness", "Respiração: brilho máximo", "呼吸:最高亮度"),
+        "se_rminmax_h" to arrayOf("Hasta dónde baja y hasta dónde sube la respiración (0–100). Se refiere al brillo de arranque; si el brillo fijo es menor (modo noche), se reducen en proporción.", "How low and how high the breathing goes (0–100). Relative to the start-up brightness; if the fixed brightness is lower (night mode) they scale down in proportion.", "Até onde desce e até onde sobe a respiração (0–100). Refere-se ao brilho de arranque; se o brilho fixo for menor (modo noite), reduzem-se na mesma proporção.", "呼吸降到多低、升到多高(0–100)。以启动亮度为基准;若固定亮度更低(夜间模式),将按比例降低。"),
+        "se_warn" to arrayOf("⚠ AJUSTES DEFINITIVOS. Lo que cambies aquí y guardes con GUARDAR se queda grabado en la centralita y se usará cada vez que arranque el coche. Sin GUARDAR, solo son pruebas temporales.", "⚠ PERMANENT SETTINGS. What you change here and store with SAVE is written to the controller and used every time the car starts. Without SAVE, changes are only temporary tests.", "⚠ AJUSTES DEFINITIVOS. O que alterar aqui e guardar com GUARDAR fica gravado na central e é usado sempre que o carro arranca. Sem GUARDAR, são apenas testes temporários.", "⚠ 永久设置。您在此更改并点按“保存”的内容会写入控制器,每次启动车辆都会使用。未保存时仅为临时试用。"),
+        "se_warn_save" to arrayOf("GUARDAR graba estos valores como definitivos para cada arranque.", "SAVE stores these values as permanent for every start-up.", "GUARDAR grava estes valores como definitivos para cada arranque.", "“保存”会将这些值永久写入,用于每次启动。"),
+        "sc_lat" to arrayOf("Latitud", "Latitude", "Latitude", "纬度"),
+        "sc_lon" to arrayOf("Longitud", "Longitude", "Longitude", "经度"),
+        "sc_geo" to arrayOf("USAR MI UBICACIÓN", "USE MY LOCATION", "USAR A MINHA LOCALIZAÇÃO", "使用我的位置"),
+        "sc_geo_fail" to arrayOf("El navegador no da la ubicación en esta página: escribe latitud y longitud a mano (por ejemplo, de Google Maps).", "The browser does not give the location on this page: type latitude and longitude by hand (for example from Google Maps).", "O navegador não fornece a localização nesta página: escreva a latitude e a longitude à mão (por exemplo, do Google Maps).", "浏览器在此页面无法获取位置:请手动输入纬度和经度(例如来自谷歌地图)。"),
+        "sc_sol_web" to arrayOf("En esta página el modo Por sol necesita las coordenadas y solo se aplica mientras esté abierta.", "On this page By sun needs the coordinates and only applies while it is open.", "Nesta página o modo Pelo sol precisa das coordenadas e só se aplica enquanto estiver aberta.", "在此页面,“按日出日落”需要坐标,且仅在页面打开时生效。"),
     )
 }
 
