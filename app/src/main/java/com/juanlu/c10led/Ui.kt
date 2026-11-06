@@ -140,6 +140,29 @@ fun C10App(ble: BleController) {
     }
     var avisoAj by remember { mutableStateOf("") }
     var confirmarReset by remember { mutableStateOf(false) }
+    var confirmarGuardar by remember { mutableStateOf(false) }
+    var guardadoTick by remember { mutableStateOf(0) }
+    var enviadoAj by remember { mutableStateOf<List<Int>?>(null) }
+    var verifFallo by remember { mutableStateOf(false) }
+    var ultimoGuardado by remember { mutableStateOf(ctx.getSharedPreferences("c10prefs", 0).getString("ult_guardado", "") ?: "") }
+    LaunchedEffect(guardadoTick) {
+        val env = enviadoAj
+        if (guardadoTick > 0 && env != null) {
+            avisoAj = t("se_ver_wait"); verifFallo = false
+            delay(1800)
+            val e = ble.estado
+            val ok = e != null && e.e == env[0] && e.r == env[1] && e.p == env[2] && e.k == env[3] &&
+                kotlin.math.abs(e.d - env[4]) <= 1 && e.rn == env[5] && e.rx == env[6]
+            if (ok) {
+                avisoAj = t("se_ver_ok"); verifFallo = false
+                val fecha = java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                val txt = fecha + " · " + t("se_base_short") + " " + env[4] + " · " + t("se_wait_short") + " " + env[0] + " s · " +
+                    t("se_breath_short") + " " + env[1] + " s · " + env[5] + "–" + env[6]
+                ctx.getSharedPreferences("c10prefs", 0).edit().putString("ult_guardado", txt).apply()
+                ultimoGuardado = txt
+            } else { avisoAj = t("se_ver_fail"); verifFallo = true }
+        }
+    }
     var recordarOff by remember { mutableStateOf(ctx.getSharedPreferences("c10prefs", 0).getBoolean("rem_off", false)) }
     var duracionShow by rememberSaveable { mutableStateOf(0) }
 
@@ -445,10 +468,11 @@ fun C10App(ble: BleController) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Boton(t("se_test"), Modifier.weight(1f), enabled = conectado) { ble.enviar(cmdSet()); avisoAj = t("se_tried") }
                                     Boton(t("se_save"), Modifier.weight(1f), enabled = conectado, principal = true) {
-                                        ble.enviar(cmdSet()); ble.enviar("SAVE"); avisoAj = t("se_saved")
+                                        confirmarGuardar = true
                                     }
                                 }
-                                if (avisoAj.isNotEmpty()) Nota(avisoAj)
+                                if (avisoAj.isNotEmpty()) { if (verifFallo) Aviso(avisoAj) else Nota(avisoAj) }
+                                if (ultimoGuardado.isNotEmpty()) Nota(t("se_last", ultimoGuardado))
                                 Spacer(Modifier.height(10.dp))
                                 Boton(t("se_reset"), Modifier.fillMaxWidth(), enabled = conectado, peligro = true) { confirmarReset = true }
                             }
@@ -529,6 +553,28 @@ fun C10App(ble: BleController) {
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
 
+            if (confirmarGuardar) {
+                val aa = aj
+                AlertDialog(
+                    onDismissRequest = { confirmarGuardar = false },
+                    title = { Text(t("se_conf_t")) },
+                    text = { Text(t("se_conf_m")) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            confirmarGuardar = false
+                            if (aa != null) {
+                                val rn = aa.rn.coerceIn(10, 980)
+                                val rx = aa.rx.coerceIn(rn + 10, 1000)
+                                ble.enviar("SET:${aa.e},${aa.r},${aa.p},${aa.k},${aa.d},$rn,$rx")
+                                ble.enviar("SAVE")
+                                enviadoAj = listOf(aa.e, aa.r, aa.p, aa.k, aa.d, rn, rx)
+                                guardadoTick++
+                            }
+                        }) { Text(t("se_save")) }
+                    },
+                    dismissButton = { TextButton(onClick = { confirmarGuardar = false }) { Text(t("back")) } }
+                )
+            }
             if (confirmarReset) {
                 AlertDialog(
                     onDismissRequest = { confirmarReset = false },
