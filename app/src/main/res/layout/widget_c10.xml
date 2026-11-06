@@ -1,53 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Widget C10 LED: marca a la izquierda, botones OFF / ON a la derecha. Una sola fila. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:background="@drawable/w_bg_fondo"
-    android:padding="8dp">
-
-    <TextView
-        android:id="@+id/w_titulo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="BARRA C10 LED"
-        android:textColor="#FFC94D"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.08"
-        android:paddingBottom="6dp" />
+    android:paddingStart="14dp"
+    android:paddingEnd="6dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/w_off"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:background="@drawable/w_bg_off"
-            android:gravity="center"
-            android:text="OFF"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BARRA"
+            android:textColor="#8C93A3"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.35"
+            android:includeFontPadding="false" />
 
         <TextView
-            android:id="@+id/w_on"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/w_bg_on"
-            android:gravity="center"
-            android:text="ON"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="C10 LED"
+            android:textColor="#FFC94D"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.06"
+            android:includeFontPadding="false"
+            android:layout_marginTop="1dp" />
+
+        <ImageView
+            android:layout_width="58dp"
+            android:layout_height="5dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/w_tira_leds" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/w_off"
+        android:layout_width="62dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/w_bg_off"
+        android:gravity="center"
+        android:drawableStart="@drawable/w_ic_power_off"
+        android:drawablePadding="3dp"
+        android:paddingStart="9dp"
+        android:paddingEnd="10dp"
+        android:text="OFF"
+        android:textColor="#FF8A95"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/w_on"
+        android:layout_width="62dp"
+        android:layout_height="34dp"
+        android:background="@drawable/w_bg_on"
+        android:gravity="center"
+        android:drawableStart="@drawable/w_ic_power_on"
+        android:drawablePadding="3dp"
+        android:paddingStart="11dp"
+        android:paddingEnd="12dp"
+        android:text="ON"
+        android:textColor="#2A1700"
+        android:textSize="12sp"
+        android:textStyle="bold" />
 </LinearLayout>

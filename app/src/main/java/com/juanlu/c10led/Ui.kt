@@ -42,10 +42,13 @@ import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-private val Bg = Color(0xFF080C14)
-private val Muted = Color(0xFF9BA9BD)
-private val Cyan = Color(0xFF38BDF8)
-private val Line = Color(0x2B94A3B8)
+private val Bg = Color(0xFF0C0E13)
+private val Muted = Color(0xFF8C93A3)
+private val Ambar = Color(0xFFFFC94D)
+private val AmbarB = Color(0xFFFF9F1C)
+private val TxtAmbar = Color(0xFF2A1700)
+private val Line = Color(0x2EFFFFFF)
+private val Condensada = FontFamily(android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.BOLD))
 private val Txt = Color(0xFFF4F7FB)
 
 /** PWM de una escala 0..1000 (igual que el sketch: 655 = 0x0650 exacto). */
@@ -171,8 +174,14 @@ fun C10App(ble: BleController) {
         else -> Color(0xFF123021)
     }
 
-    MaterialTheme(colorScheme = darkColorScheme(background = Bg, surface = Bg)) {
-        Surface(modifier = Modifier.fillMaxSize(), color = Bg) {
+    MaterialTheme(colorScheme = darkColorScheme(
+        background = Bg, surface = Bg, primary = Ambar, onPrimary = TxtAmbar,
+        secondary = Ambar, tertiary = Ambar, primaryContainer = Color(0xFF3A2A0A), onPrimaryContainer = Ambar
+    )) {
+        Surface(
+            modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1A1E29), Color(0xFF0C0E13), Color(0xFF090B10)))),
+            color = Color.Transparent
+        ) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .statusBarsPadding().navigationBarsPadding()
@@ -186,23 +195,18 @@ fun C10App(ble: BleController) {
                 }
                 // ---- Cabecera (5 toques en el titulo = pantalla tecnica) ----
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 2.dp, bottom = 12.dp)) {
-                    Box(
-                        Modifier.size(46.dp).clip(RoundedCornerShape(15.dp))
-                            .background(Brush.linearGradient(listOf(Color(0xFF38BDF8), Color(0xFF2563EB)))),
-                        contentAlignment = Alignment.Center
-                    ) { Icon(Icons.Filled.ShowChart, null, tint = Color.White, modifier = Modifier.size(27.dp)) }
-                    Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("JUANLU · C10 LED", color = Cyan, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                        Text("BARRA", color = Muted, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.5.sp)
                         Text(
-                            "C10 LED Control", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold,
+                            "C10 LED", color = Ambar, fontSize = 34.sp, fontFamily = Condensada, letterSpacing = 1.2.sp,
                             modifier = Modifier.clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) {
                                 val ahora = System.currentTimeMillis()
                                 val l = toques.filter { ahora - it < 3000 } + ahora
                                 if (l.size >= 5) { tecnica = !tecnica; toques = emptyList() } else toques = l
                             }
                         )
-                        Text(t("sub"), color = Muted, fontSize = 12.sp)
+                        TiraLeds()
+                        Text(t("sub"), color = Muted, fontSize = 11.5.sp, modifier = Modifier.padding(top = 6.dp))
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
@@ -235,10 +239,10 @@ fun C10App(ble: BleController) {
                         Tarjeta {
                             Etiq(t("quick"))
                             Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                                BigButton(Modifier.weight(1f), t("off_t"), t("off_s"), Color(0xFFFF5967), Color(0xFFC81E3A), Icons.Filled.Close, conectado) {
+                                BigButton(Modifier.weight(1f), t("off_t"), t("off_s"), false, Icons.Filled.Close, conectado) {
                                     ble.enviar(if (recordarOff) "OFFSAVE" else "OFF")
                                 }
-                                BigButton(Modifier.weight(1f), t("on_t"), t("on_s"), Color(0xFF2BD576), Color(0xFF12844A), Icons.Filled.PowerSettingsNew, conectado) {
+                                BigButton(Modifier.weight(1f), t("on_t"), t("on_s"), true, Icons.Filled.PowerSettingsNew, conectado) {
                                     ble.enviar("ON"); avisoAj = ""; ajReinit++
                                 }
                             }
@@ -261,7 +265,7 @@ fun C10App(ble: BleController) {
                         Tarjeta {
                             Etiq(t("b_title"))
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("${(brillo / 10.0).roundToInt()}", color = Cyan, fontSize = 54.sp, fontWeight = FontWeight.ExtraBold)
+                                Text("${(brillo / 10.0).roundToInt()}", color = Ambar, fontSize = 54.sp, fontWeight = FontWeight.ExtraBold)
                                 Text("0 – 100", color = Muted, fontSize = 11.sp)
                             }
                             Slider(
@@ -392,17 +396,20 @@ fun C10App(ble: BleController) {
                                     aj = a.copy(r = if (v in 1..9) 10 else v)
                                 }, valueRange = 0f..600f)
                                 Nota(t("se_breath0"))
-                                FilaValor(t("se_rmin"), "${(a.rn / 10f).roundToInt()}")
-                                Slider(value = a.rn / 10f, onValueChange = {
-                                    val v = (it.roundToInt() * 10).coerceIn(10, 980)
-                                    aj = a.copy(rn = v, rx = maxOf(a.rx, v + 10))
-                                }, valueRange = 1f..98f)
-                                FilaValor(t("se_rmax"), "${(a.rx / 10f).roundToInt()}")
-                                Slider(value = a.rx / 10f, onValueChange = {
-                                    val v = (it.roundToInt() * 10).coerceIn(20, 1000)
-                                    aj = a.copy(rx = v, rn = minOf(a.rn, v - 10))
-                                }, valueRange = 2f..100f)
-                                Nota(t("se_rminmax_h"))
+                                Text(t("rs_title"), color = Txt, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text(t("rs_min"), color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        CampoNumero(a.rn) { aj = a.copy(rn = it) }
+                                        Boton(t("b_use"), Modifier.fillMaxWidth(), pequeno = true) { aj = a.copy(rn = brillo.coerceIn(0, 1000)) }
+                                    }
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text(t("rs_max"), color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        CampoNumero(a.rx) { aj = a.copy(rx = it) }
+                                        Boton(t("b_use"), Modifier.fillMaxWidth(), pequeno = true) { aj = a.copy(rx = brillo.coerceIn(0, 1000)) }
+                                    }
+                                }
+                                Nota(t("rs_hint"))
                                 Text(t("se_pp"), color = Txt, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Boton(t("se_pp_off"), Modifier.weight(1f), principal = a.p == 0, pequeno = true) { aj = a.copy(p = 0) }
@@ -434,7 +441,7 @@ fun C10App(ble: BleController) {
                                 Spacer(Modifier.height(14.dp))
                                 AvisoAmarillo(t("se_warn_save"))
                                 Spacer(Modifier.height(8.dp))
-                                fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d},${a.rn},${a.rx}"
+                                fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d},${a.rn.coerceIn(10, 980)},${a.rx.coerceIn(a.rn.coerceIn(10, 980) + 10, 1000)}"
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Boton(t("se_test"), Modifier.weight(1f), enabled = conectado) { ble.enviar(cmdSet()); avisoAj = t("se_tried") }
                                     Boton(t("se_save"), Modifier.weight(1f), enabled = conectado, principal = true) {
@@ -490,7 +497,7 @@ fun C10App(ble: BleController) {
                 // =============================== TECNICA (oculta) ===============================
                 if (tecnica) {
                     Spacer(Modifier.height(14.dp))
-                    Tarjeta(borde = Cyan) {
+                    Tarjeta(borde = Ambar) {
                         Etiq(t("te_title"))
                         Nota(t("te_hint"))
                         Text(t("te_scale"), color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -547,14 +554,14 @@ fun C10App(ble: BleController) {
 private fun Tarjeta(borde: Color = Line, content: @Composable ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF131D2E), Color(0xFF0C121E))))
+            .background(Brush.linearGradient(listOf(Color(0xF0222631), Color(0xF00C0E13))))
             .border(1.dp, borde, RoundedCornerShape(22.dp)).padding(18.dp),
         content = content
     )
 }
 
 @Composable private fun Etiq(x: String) {
-    Text(x, color = Muted, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.4.sp, modifier = Modifier.padding(bottom = 12.dp))
+    Text(x, color = Muted, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.4.sp, modifier = Modifier.padding(bottom = 12.dp))
 }
 
 @Composable private fun AvisoAmarillo(x: String) {
@@ -607,14 +614,14 @@ private fun Chip(texto: String, activo: Boolean, modifier: Modifier = Modifier, 
     Box(
         modifier
             .then(if (alto > 0) Modifier.height(alto.dp) else Modifier)
-            .clip(RoundedCornerShape(11.dp))
-            .background(if (activo) Color(0xFF0C4A6E) else Color(0xFF0D1421))
-            .border(1.dp, if (activo) Cyan else Line, RoundedCornerShape(11.dp))
+            .clip(RoundedCornerShape(50))
+            .background(if (activo) Color(0xFF3A2A0A) else Color(0xFF12151C))
+            .border(1.dp, if (activo) Ambar else Line, RoundedCornerShape(50))
             .clickable { onClick() }
             .padding(horizontal = 11.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(texto, color = if (activo) Color(0xFFE0F2FE) else Muted, fontSize = 11.5.sp,
+        Text(texto, color = if (activo) Ambar else Muted, fontSize = 11.5.sp,
             fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, maxLines = 2)
     }
 }
@@ -624,16 +631,23 @@ private fun Boton(
     texto: String, modifier: Modifier = Modifier, enabled: Boolean = true, principal: Boolean = false,
     peligro: Boolean = false, pequeno: Boolean = false, onClick: () -> Unit
 ) {
-    val fondo = when { peligro -> Color(0xFF3B0D18); principal -> Color(0xFF0B7FC0); else -> Color(0xFF15213A) }
-    val borde = when { peligro -> Color(0xFF9F1239); principal -> Cyan; else -> Color(0xFF2C3D57) }
+    val forma = RoundedCornerShape(50)
+    val fondo: Brush = when {
+        !enabled -> Brush.linearGradient(listOf(Color(0xFF12151C), Color(0xFF12151C)))
+        peligro -> Brush.linearGradient(listOf(Color(0xFF2B161B), Color(0xFF2B161B)))
+        principal -> Brush.horizontalGradient(listOf(Color(0xFFFFD166), AmbarB))
+        else -> Brush.linearGradient(listOf(Color(0xFF1B202B), Color(0xFF161A23)))
+    }
+    val borde = when { !enabled -> Line; peligro -> Color(0x80E5484D); principal -> Color.Transparent; else -> Line }
+    val colorTxt = when { !enabled -> Muted; peligro -> Color(0xFFFF8A95); principal -> TxtAmbar; else -> Color(0xFFE5EAF3) }
     Box(
-        modifier.height(if (pequeno) 36.dp else 46.dp).clip(RoundedCornerShape(12.dp))
-            .background(if (enabled) fondo else Color(0xFF111827))
-            .border(1.dp, if (enabled) borde else Line, RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled) { onClick() }.padding(horizontal = 10.dp),
+        modifier.height(if (pequeno) 34.dp else 44.dp).clip(forma)
+            .background(fondo)
+            .border(1.dp, borde, forma)
+            .clickable(enabled = enabled) { onClick() }.padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(texto, color = if (enabled) Color(0xFFE5EDF8) else Muted, fontSize = if (pequeno) 11.sp else 12.5.sp,
+        Text(texto, color = colorTxt, fontSize = if (pequeno) 11.sp else 12.5.sp,
             fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, maxLines = 2)
     }
 }
@@ -657,19 +671,38 @@ private fun CampoNumero(valor: Int, modifier: Modifier = Modifier.fillMaxWidth()
 
 @Composable
 private fun BigButton(
-    modifier: Modifier, titulo: String, sub: String, c1: Color, c2: Color,
+    modifier: Modifier, titulo: String, sub: String, encendido: Boolean,
     icono: ImageVector, enabled: Boolean, onClick: () -> Unit
 ) {
+    val forma = RoundedCornerShape(26.dp)
+    val fondo = if (encendido) Brush.horizontalGradient(listOf(Color(0xFFFFD166), AmbarB))
+                else Brush.linearGradient(listOf(Color(0xFF2B161B), Color(0xFF2B161B)))
+    val colorIc = if (encendido) TxtAmbar else Color(0xFFFF6B78)
+    val colorTxt = if (encendido) TxtAmbar else Color(0xFFFF8A95)
     Column(
-        modifier.height(96.dp).clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(listOf(c1, c2)))
+        modifier.height(96.dp).clip(forma)
+            .background(fondo)
+            .border(1.dp, if (encendido) Color.Transparent else Color(0x80E5484D), forma)
             .clickable(enabled = enabled) { onClick() }
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
-        Icon(icono, null, tint = Color.White, modifier = Modifier.size(26.dp))
+        Icon(icono, null, tint = colorIc, modifier = Modifier.size(26.dp))
         Spacer(Modifier.height(5.dp))
-        Text(titulo, color = Color.White, fontSize = 12.5.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
-        Text(sub, color = Color(0xCCFFFFFF), fontSize = 10.sp, textAlign = TextAlign.Center)
+        Text(titulo, color = colorTxt, fontSize = 12.5.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+        Text(sub, color = colorTxt.copy(alpha = 0.75f), fontSize = 10.sp, textAlign = TextAlign.Center)
+    }
+}
+
+/** Tira de 9 leds que se ilumina hacia el centro (la marca de la barra). */
+@Composable private fun TiraLeds() {
+    androidx.compose.foundation.Canvas(Modifier.padding(top = 5.dp).width(104.dp).height(7.dp)) {
+        val al = floatArrayOf(.25f, .4f, .6f, .8f, 1f, .8f, .6f, .4f, .25f)
+        val gap = 3.dp.toPx()
+        val w = (size.width - gap * 8) / 9
+        for (i in 0 until 9) {
+            drawRoundRect(Ambar.copy(alpha = al[i]), androidx.compose.ui.geometry.Offset(i * (w + gap), 0f),
+                androidx.compose.ui.geometry.Size(w, size.height), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+        }
     }
 }
