@@ -179,6 +179,21 @@ object I18n {
         "fine_hint" to arrayOf("Valor fino 0–1000", "Fine value 0–1000", "Valor fino 0–1000", "精细值 0–1000"),
         "disconnect" to arrayOf("DESCONECTAR", "DISCONNECT", "DESLIGAR", "断开"),
         "se_try_ok" to arrayOf("Probando (sin guardar)", "Trying (not saved)", "A testar (sem guardar)", "试用中(未保存)"),
+        "car_on" to arrayOf("Encender", "Turn on", "Ligar", "开灯"),
+        "car_off" to arrayOf("Apagar", "Turn off", "Desligar", "关灯"),
+        "car_ctl" to arrayOf("Control", "Control", "Controle", "控制"),
+        "car_br" to arrayOf("Brillo", "Brightness", "Brilho", "亮度"),
+        "car_fx" to arrayOf("Shows", "Shows", "Shows", "演示"),
+        "car_stop" to arrayOf("Parar show", "Stop show", "Parar show", "停止演示"),
+        "car_wait" to arrayOf("Sin conexión con la centralita", "No connection to the controller", "Sem ligação à central", "未连接控制器"),
+        "sc_modo_hora" to arrayOf("Por hora", "By time", "Por hora", "按时间"),
+        "sc_modo_sol" to arrayOf("Por sol", "By sun", "Pelo sol", "按日出日落"),
+        "sc_sol_hoy" to arrayOf("Hoy sale / se pone el sol: {0}", "Today sunrise / sunset: {0}", "Hoje nasce / põe-se o sol: {0}", "今天日出 / 日落:{0}"),
+        "sc_sol_perm" to arrayOf("Permite la ubicación aproximada para calcular el amanecer y el atardecer.", "Allow approximate location to calculate sunrise and sunset.", "Permita a localização aproximada para calcular o nascer e o pôr do sol.", "请允许大致位置,以计算日出和日落时间。"),
+        "sc_sol_noloc" to arrayOf("Obteniendo la ubicación… Mientras tanto se usa la programación por hora.", "Getting your location… The time schedule is used meanwhile.", "A obter a localização… Entretanto usa-se a programação por hora.", "正在获取位置…期间使用按时间定时。"),
+        "sc_sol_hint" to arrayOf("DÍA va del amanecer al atardecer y NOCHE del atardecer al amanecer, según el lugar donde esté el móvil. Se calcula en el propio móvil y se actualiza al viajar.", "DAY runs from sunrise to sunset and NIGHT from sunset to sunrise, wherever the phone is. It is calculated on the phone and updates as you travel.", "DIA vai do nascer ao pôr do sol e NOITE do pôr ao nascer do sol, onde o telemóvel estiver. Calcula-se no próprio telemóvel e atualiza-se ao viajar.", "白天为日出到日落,夜间为日落到日出,以手机所在位置为准。在手机上本地计算,旅行时自动更新。"),
+        "se_pp_cl" to arrayOf("Clásico", "Classic", "Clássico", "经典"),
+        "se_pp_co" to arrayOf("Cometa", "Comet", "Cometa", "彗星"),
     )
 }
 

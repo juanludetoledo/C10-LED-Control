@@ -86,7 +86,7 @@ class AutoReceiver : BroadcastReceiver() {
         val app = ctx.applicationContext
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> { Auto.programar(app); return }
-            Auto.ACC_ALARMA -> Auto.programar(app)           // deja preparada la siguiente
+            Auto.ACC_ALARMA -> { Sol.actualizar(app); Auto.programar(app) }   // refresca ubicacion y deja preparada la siguiente
             Auto.ACC_SCAN -> { }
             else -> return
         }

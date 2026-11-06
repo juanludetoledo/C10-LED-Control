@@ -1,5 +1,6 @@
 package com.juanlu.c10led
 
+import android.Manifest
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -51,7 +52,7 @@ private val Txt = Color(0xFFF4F7FB)
 private fun pwmDe(v: Int): Int =
     if (v == 655) 0x0650 else (4095.0 * (v / 1000.0).pow(2.2)).roundToInt().coerceIn(3, 4095)
 
-private data class Ajustes(val e: Int, val r: Int, val p: Boolean, val k: Int, val w: Int, val d: Int)
+private data class Ajustes(val e: Int, val r: Int, val p: Int, val k: Int, val w: Int, val d: Int)
 
 @Composable
 fun C10App(ble: BleController) {
@@ -78,6 +79,10 @@ fun C10App(ble: BleController) {
     // ---- Programacion (por movil) ----
     var prog by remember { mutableStateOf(Prog.cargar(ctx)) }
     fun cambiarProg(p: Prog) { prog = p; Prog.guardar(ctx, p); Auto.programar(ctx.applicationContext) }
+    // Ubicacion para el modo sol: se refresca al abrir la app y al activar el modo
+    fun refrescarUbicacion() { Sol.actualizar(ctx) { prog = Prog.cargar(ctx).copy(); Auto.programar(ctx.applicationContext) } }
+    val lanzaUbic = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refrescarUbicacion() }
+    LaunchedEffect(prog.sol) { if (prog.sol) { if (Sol.tienePermiso(ctx)) refrescarUbicacion() else lanzaUbic.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) } }
 
     // ---- Brillo ----
     var brillo by rememberSaveable { mutableStateOf(655) }
@@ -95,7 +100,7 @@ fun C10App(ble: BleController) {
     // Al conectar (y al cambiar de periodo, y al acabar un show) se aplica el brillo del periodo actual
     // con expansion. Un brillo manual manda hasta el siguiente cambio de periodo.
     val progActual by rememberUpdatedState(prog)
-    LaunchedEffect(conectado, prog.activa, prog.diaDesde, prog.nocheDesde) {
+    LaunchedEffect(conectado, prog.activa, prog.diaDesde, prog.nocheDesde, prog.sol, prog.lat, prog.lon) {
         var perAplicado: Boolean? = null
         var vistoShow = false
         while (conectado) {
@@ -287,7 +292,19 @@ fun C10App(ble: BleController) {
                                 Switch(checked = prog.activa, onCheckedChange = { cambiarProg(prog.copy(activa = it)) })
                             }
                             Spacer(Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Boton(t("sc_modo_hora"), Modifier.weight(1f), principal = !prog.sol) { cambiarProg(prog.copy(sol = false)) }
+                                Boton(t("sc_modo_sol"), Modifier.weight(1f), principal = prog.sol) { cambiarProg(prog.copy(sol = true)) }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            if (prog.sol) {
+                                val sd = if (prog.lat.isNaN() || prog.lon.isNaN()) null else Sol.diaSol(prog.lat, prog.lon, java.util.Calendar.getInstance())
+                                if (sd != null) Nota(t("sc_sol_hoy", Prog.hhmmMs(sd.first) + " / " + Prog.hhmmMs(sd.second)))
+                                else if (!Sol.tienePermiso(ctx)) Nota(t("sc_sol_perm"))
+                                else Nota(t("sc_sol_noloc"))
+                                Nota(t("sc_sol_hint"))
+                            }
+                            if (!prog.sol) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Column(Modifier.weight(1f)) {
                                     Text(t("sc_dayfrom"), color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     Boton(Prog.hhmm(prog.diaDesde), Modifier.fillMaxWidth()) {
@@ -356,9 +373,11 @@ fun C10App(ble: BleController) {
                                     aj = a.copy(r = if (v in 1..9) 10 else v)
                                 }, valueRange = 0f..600f)
                                 Nota(t("se_breath0"))
-                                Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(t("se_pp"), color = Txt, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                    Switch(checked = a.p, onCheckedChange = { aj = a.copy(p = it) })
+                                Text(t("se_pp"), color = Txt, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
+                                Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Boton(t("se_pp_off"), Modifier.weight(1f), principal = a.p == 0, pequeno = true) { aj = a.copy(p = 0) }
+                                    Boton(t("se_pp_cl"), Modifier.weight(1f), principal = a.p == 1, pequeno = true) { aj = a.copy(p = 1) }
+                                    Boton(t("se_pp_co"), Modifier.weight(1f), principal = a.p == 2, pequeno = true) { aj = a.copy(p = 2) }
                                 }
                                 FilaValor(t("se_sens"), "${a.k}")
                                 Slider(value = a.k.toFloat(), onValueChange = { aj = a.copy(k = it.roundToInt()) }, valueRange = 1f..10f, steps = 8)
@@ -383,7 +402,7 @@ fun C10App(ble: BleController) {
                                 }
                                 Boton(t("se_preview"), Modifier.fillMaxWidth(), enabled = conectado) { ble.enviar("WPLAY:${a.w}") }
                                 Spacer(Modifier.height(14.dp))
-                                fun cmdSet() = "SET:${a.e},${a.r},${if (a.p) 1 else 0},${a.k},${a.d}"
+                                fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d}"
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Boton(t("se_test"), Modifier.weight(1f), enabled = conectado) { ble.enviar(cmdSet()); avisoAj = t("se_tried") }
                                     Boton(t("se_save"), Modifier.weight(1f), enabled = conectado, principal = true) {

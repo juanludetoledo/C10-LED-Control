@@ -455,7 +455,7 @@ internal fun permisosNecesarios(): Array<String> =
 
 /** Estado de la centralita (texto "NORMAL;n=655;e=15;..." del sketch). */
 data class EstadoC(
-    val off: Boolean = false, val n: Int = 655, val e: Int = 15, val r: Int = 45, val p: Boolean = true,
+    val off: Boolean = false, val n: Int = 655, val e: Int = 15, val r: Int = 45, val p: Int = 1,
     val k: Int = 5, val w: Int = 1, val d: Int = 655, val m: Boolean = false, val o: Boolean = false,
     val h: Int = 0, val b: Boolean = true, val v: String = ""
 ) {
@@ -470,7 +470,7 @@ data class EstadoC(
             }
             fun i(k: String, def: Int) = mp[k]?.toIntOrNull() ?: def
             return EstadoC(
-                off = partes[0] == "OFF", n = i("n", 655), e = i("e", 15), r = i("r", 45), p = i("p", 1) != 0,
+                off = partes[0] == "OFF", n = i("n", 655), e = i("e", 15), r = i("r", 45), p = i("p", 1),
                 k = i("k", 5), w = i("w", 1), d = i("d", 655), m = i("m", 0) != 0, o = i("o", 0) != 0,
                 h = i("h", 0), b = i("b", 1) != 0, v = mp["v"] ?: ""
             )
