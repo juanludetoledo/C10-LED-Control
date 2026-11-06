@@ -1,0 +1,6 @@
+C10 LED CONTROL 2.0-definitiva (proyecto Android)
+- Sube la carpeta a GitHub como siempre (workflow .github/workflows/build.yml) y descarga el APK firmado.
+- NO he podido compilarla aqui (sin Android SDK). Revisada a mano; si GitHub da un error, mandamelo tal cual.
+- Android 8+ (BLE). iPhone: solo la pagina Wi-Fi (192.168.4.1).
+- Segundo plano (mejor esfuerzo): alarma en cada cambio de periodo + vigilancia BLE. Si el movil la detiene, se aplica al abrir la app.
+- Pantalla tecnica: 5 toques en el titulo.

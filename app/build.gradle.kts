@@ -11,8 +11,8 @@ android {
         applicationId = "com.juanlu.c10led"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2-idiomas"
+        versionCode = 5
+        versionName = "2.0-definitiva"
     }
 
     signingConfigs {
