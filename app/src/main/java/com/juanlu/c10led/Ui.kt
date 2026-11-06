@@ -375,7 +375,7 @@ fun C10App(ble: BleController) {
                         val a = aj
                         Tarjeta {
                             Etiq(t("se_title"))
-                            Aviso(t("se_warn"))
+                            AvisoAmarillo(t("se_warn"))
                             Nota(t("se_desc"))
                             if (a == null) {
                                 Nota(t("s_nocon"))
@@ -432,7 +432,7 @@ fun C10App(ble: BleController) {
                                 }
                                 Boton(t("se_preview"), Modifier.fillMaxWidth(), enabled = conectado) { ble.enviar("WPLAY:${a.w}") }
                                 Spacer(Modifier.height(14.dp))
-                                Aviso(t("se_warn_save"))
+                                AvisoAmarillo(t("se_warn_save"))
                                 Spacer(Modifier.height(8.dp))
                                 fun cmdSet() = "SET:${a.e},${a.r},${a.p},${a.k},${a.d},${a.rn},${a.rx}"
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -557,7 +557,7 @@ private fun Tarjeta(borde: Color = Line, content: @Composable ColumnScope.() -> 
     Text(x, color = Muted, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.4.sp, modifier = Modifier.padding(bottom = 12.dp))
 }
 
-@Composable private fun Aviso(x: String) {
+@Composable private fun AvisoAmarillo(x: String) {
     Box(
         Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF33250A)).border(1.dp, Color(0xFFFBBF24), RoundedCornerShape(12.dp)).padding(11.dp)
