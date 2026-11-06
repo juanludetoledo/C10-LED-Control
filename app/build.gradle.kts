@@ -11,8 +11,8 @@ android {
         applicationId = "com.juanlu.c10led"
         minSdk = 26
         targetSdk = 34
-        versionCode = 16
-        versionName = "2.4-colores-azul"
+        versionCode = 17
+        versionName = "2.4.1-firma-fija"
     }
 
     signingConfigs {
@@ -25,6 +25,10 @@ android {
     }
 
     buildTypes {
+        // Debug firmado con la MISMA clave fija: asi cualquier APK (debug o release) se actualiza encima de la anterior.
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
